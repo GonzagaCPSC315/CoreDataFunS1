@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 // MARK: - Core Data
 // we've made a DataModel that abstracts a SQLite database
@@ -19,17 +20,29 @@ import UIKit
 // think of the context like the staging area of a git repo
 // saving the context is like committing in git, its when our changes are actually written to disk (the db)
 
-
+// MARK: - CRUD: Common Database Operations
+// a persistent container abstracts a data store for us
+// by default the data store is a SQLite database
+// we work with a persistent container's context instead of with the persistent container directly
+// we will use the context for commont DB operations
+// CRUD: create, retrieve/read, update, delete
+// let's start with the C
 
 class CategoryTableViewController: UITableViewController {
     
-    var categoryArray = ["Home", "Work", "Family"]
+    //var categoryArray = ["Home", "Work", "Family"]
+    var categoryArray = [Category]()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
         self.navigationItem.leftBarButtonItem = self.editButtonItem
+        
+        // print out the documents directory so we can see our database in Finder
+        let documentsDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        print(documentsDirectoryURL)
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -42,7 +55,7 @@ class CategoryTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         let category = categoryArray[indexPath.row]
-        cell.textLabel?.text = category
+        cell.textLabel?.text = category.name
         
         return cell
     }
@@ -72,8 +85,11 @@ class CategoryTableViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Create", style: .default) { (alertAction) in
             let text = alertTextField.text!
-            self.categoryArray.append(text)
-            self.tableView.reloadData()
+            // CREATE (C of CRUD)
+            let newCategory = Category(context: self.context)
+            newCategory.name = text
+            self.categoryArray.append(newCategory)
+            self.saveCategories()
         }
         
         alert.addAction(action)
@@ -94,6 +110,17 @@ class CategoryTableViewController: UITableViewController {
             let category = categoryArray[selectedIndexPath.row]
             itemsTableVC.category = category
         }
+    }
+    
+    func saveCategories() {
+        // we want to save the context "to disk" (db)
+        do {
+            try context.save() // like git commit
+        }
+        catch {
+            print("Error saving categories \(error)")
+        }
+        tableView.reloadData()
     }
 }
 
