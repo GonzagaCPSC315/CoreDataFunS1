@@ -7,9 +7,13 @@
 //
 
 import UIKit
+import CoreData
 
 class ItemsTableViewController: UITableViewController {
     
+    // next: change itemArray to be an array of Item
+    // add the context property
+    // fix the build errors
     var category: Category? = nil
     var itemArray = [String]()
 
