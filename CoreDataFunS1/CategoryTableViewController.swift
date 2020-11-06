@@ -43,6 +43,8 @@ class CategoryTableViewController: UITableViewController {
         // print out the documents directory so we can see our database in Finder
         let documentsDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         print(documentsDirectoryURL)
+        
+        loadCategories()
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -119,6 +121,22 @@ class CategoryTableViewController: UITableViewController {
         }
         catch {
             print("Error saving categories \(error)")
+        }
+        tableView.reloadData()
+    }
+    
+    // READ of CRUD
+    func loadCategories() {
+        // we need to make a "request" to get the Category objects
+        // via the persistent container
+        let request: NSFetchRequest<Category> = Category.fetchRequest()
+        // with a sql SELECT statement we usually specify a WHERE clause if we want to filter rows from the table we are selecting from
+        // if we want to filter, we need to add a "predicate" to our request... we will do this later for Items
+        do {
+            categoryArray = try context.fetch(request)
+        }
+        catch {
+            print("Error loading categories \(error)")
         }
         tableView.reloadData()
     }
