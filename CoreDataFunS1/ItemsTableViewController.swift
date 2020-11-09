@@ -14,8 +14,15 @@ class ItemsTableViewController: UITableViewController {
     // next: change itemArray to be an array of Item
     // add the context property
     // fix the build errors
-    var category: Category? = nil
-    var itemArray = [String]()
+    var category: Category? = nil {
+        // Mark: lab #6
+        didSet {
+            loadItems()
+        }
+    }
+    var itemArray = [Item]()
+    
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,7 +48,7 @@ class ItemsTableViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ItemCell", for: indexPath)
 
         let item = itemArray[indexPath.row]
-        cell.textLabel?.text = item
+        cell.textLabel?.text = item.name
 
         return cell
     }
@@ -50,9 +57,13 @@ class ItemsTableViewController: UITableViewController {
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
+            // MARK: lab #7
+            context.delete(itemArray[indexPath.row])
             // Delete the row from the data source
             itemArray.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
+            
+            saveItems()
         }
     }
 
@@ -75,12 +86,44 @@ class ItemsTableViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Create", style: .default) { (alertAction) in
             let text = alertTextField.text!
-            self.itemArray.append(text)
-            self.tableView.reloadData()
+            let newItem = Item(context: self.context)
+            newItem.name = text
+            newItem.parentCategory = self.category
+            self.itemArray.append(newItem)
+            self.saveItems()
         }
         
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
+    }
+    
+    // MARK: - lab #5
+    func saveItems() {
+        do {
+            try context.save()
+        }
+        catch {
+            print("Error saving items \(error)")
+        }
+        tableView.reloadData()
+    }
+    
+    // MARK: - lab #6
+    func loadItems() {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        // predicates are used to filter objects
+        // they represent logical conditions that evaluate to true or false
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", category!.name!)
+        // %@ is a placeholder for a value of any type
+        request.predicate = categoryPredicate
+        
+        do {
+            itemArray = try context.fetch(request)
+        }
+        catch {
+            print("Error loading items \(error)")
+        }
+        tableView.reloadData()
     }
     
 }
