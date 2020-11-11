@@ -9,7 +9,7 @@
 import UIKit
 import CoreData
 
-class ItemsTableViewController: UITableViewController, UISearchBarDelegate {
+class ItemsTableViewController: UITableViewController {
     
     // next: change itemArray to be an array of Item
     // add the context property
@@ -124,7 +124,14 @@ class ItemsTableViewController: UITableViewController, UISearchBarDelegate {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
         // predicates are used to filter objects
         // they represent logical conditions that evaluate to true or false
+        
+        // MARK: lab #14
+        let sortDescriptor = NSSortDescriptor(key: "name", ascending: true, selector: #selector(NSString.caseInsensitiveCompare))
+        request.sortDescriptors = [sortDescriptor]
+        
         let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", category!.name!)
+        
+        // MARK: lab #11.b.
         if let pred = predicate {
             // need to combine categoryPredicate and pred into a compoud predicate
             let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, pred])
@@ -144,10 +151,17 @@ class ItemsTableViewController: UITableViewController, UISearchBarDelegate {
         tableView.reloadData()
     }
     
-    // MARK: - Search Bar Delegate Method(s)
+}
+
+// MARK: - Search Bar Delegate Method(s)
+
+// MARK: lab #13
+extension ItemsTableViewController: UISearchBarDelegate {
+    // MARK: lab #10.b.
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         // called everytime the text changes in the search bar
         print(searchText)
+        // MARK: lab #12
         if searchText != "" {
             performSearch(searchBar: searchBar)
         }
@@ -158,9 +172,11 @@ class ItemsTableViewController: UITableViewController, UISearchBarDelegate {
         }
     }
     
+    // MARK: lab #11
     func performSearch(searchBar: UISearchBar) {
         // grab the text from the search bar
         if let text = searchBar.text {
+            // MARK: lab #11.a.
             // create a predicate to filter items
             // by text
             let predicate = NSPredicate(format: "name CONTAINS[cd] %@", text)
